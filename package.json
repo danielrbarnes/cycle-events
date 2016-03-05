@@ -1,0 +1,38 @@
+{
+  "name": "cycle-events",
+  "version": "0.0.0",
+  "description": "Provides event-based pub/sub to cycle.js applications.",
+  "main": "index.js",
+  "scripts": {
+    "test": "karma start",
+    "doc": "jsdoc -d ./build/docs index.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/danielrbarnes/cycle-events.git"
+  },
+  "keywords": [
+    "cycle",
+    "cyclejs",
+    "events",
+    "pub",
+    "sub",
+    "eventing",
+    "emit",
+    "observable",
+    "rxjs"
+  ],
+  "private": true,
+  "author": "Daniel R Barnes",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/danielrbarnes/cycle-events/issues"
+  },
+  "homepage": "https://github.com/danielrbarnes/cycle-events#readme",
+  "dependencies": {
+    "lodash": "^4.6.1"
+  },
+  "devDependencies": {
+    "jsdoc": "^3.4.0"
+  }
+}
