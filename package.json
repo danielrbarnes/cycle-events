@@ -1,6 +1,6 @@
 {
   "name": "cycle-events",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "description": "Provides event-based pub/sub to cycle.js applications.",
   "main": "index.js",
   "scripts": {
