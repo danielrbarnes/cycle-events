@@ -10,12 +10,11 @@ var _ = require('lodash');
 module.exports = (function getBrokerConstructor() {
 
     var data = new WeakMap(),
-        EVENT_ERROR = 'Parameter `event` must be a string or symbol.',
+        EVENT_ERROR = 'Parameter `event` must be a non-empty string.',
         CALLBACK_ERROR = 'Parameter `callback` must be a function.';
 
     function isValidEvent(event) {
-        return _.isString(event) && !_.isEmpty(_.trim(event)) ||
-            _.isSymbol(event);
+        return _.isString(event) && !_.isEmpty(_.trim(event));
     }
 
     function isValidCallback(callback) {
@@ -46,18 +45,33 @@ module.exports = (function getBrokerConstructor() {
      * );
      * broker.emit('my-custom-event', 'arg1', 'arg2'); // fire event
      * off(); // remove the event handler
+     * @example
+     * // add pub/sub functionality to a class and
+     * // automatically log any errors caused by
+     * // subscribers of the class:
+     * function MyClass() {
+     *   Broker.call(this); // mixin pub/sub
+     *   Rx.Observable.fromEvent(this, 'error')
+     *     .subscribeOnNext(logger.error);
+     * }
+     *
+     * // now use the class:
+     * var myClass = new MyClass();
+     * myClass.on('some-custom-event', function() {
+     *   methodDoesNotExist(); // error logged automatically
+     * });
      */
     function Broker() {
         if (!(this instanceof Broker)) {
             return new Broker();
         }
-        data.set(this, new WeakMap());
+        data.set(this, new Map());
     }
 
     /**
      * @event Broker#error
      * @type {Object}
-     * @property {String | Symbol} event The event the listener was registered for.
+     * @property {String} event The event the listener was registered for.
      * @property {Function} callback The listener that caused the error.
      * @property {Error} error The error that occurred while invoking the listener.
      * @desc An error occurred in an event listener while firing an event.
@@ -70,7 +84,7 @@ module.exports = (function getBrokerConstructor() {
     /**
      * @event Broker#listenerAdded
      * @type {Object}
-     * @property {String | Symbol} event The event the listener was registered for.
+     * @property {String} event The event the listener was registered for.
      * @property {Function} callback The listener registered for the event.
      * @desc A listener was added. Examine the event properties for details.
      * @example
@@ -84,9 +98,9 @@ module.exports = (function getBrokerConstructor() {
     /**
      * @event Broker#listenerRemoved
      * @type {Object}
-     * @property {String | Symbol} event The event the listener was removed from.
+     * @property {String} event The event the listener was removed from.
      * @property {Function} callback The listener removed from the event.
-     * @desc A listener was added. Examine the event properties for details.
+     * @desc A listener was removed. Examine the event properties for details.
      * @example
      * broker.on(Broker.Events.REMOVED, function(data) {
      *   log(data.event); // 'my-custom-event'
@@ -101,12 +115,12 @@ module.exports = (function getBrokerConstructor() {
      * @function Broker#on
      * @alias Broker#subscribe
      * @alias Broker#addListener
-     * @param event {String | Symbol} The event to subscribe to.
+     * @param event {String} The event to subscribe to.
      * @param callback {Function} The listener to invoke when the
      *  specified event is emitted.
      * @returns {Function} A method to invoke to remove the listener
      *  from the specified event.
-     * @throws {TypeError} Parameter `event` must be a string or symbol.
+     * @throws {TypeError} Parameter `event` must be a non-empty string.
      * @throws {TypeError} Parameter `callback` must be a function.
      * @fires Broker#listenerAdded
      * @example
@@ -118,9 +132,9 @@ module.exports = (function getBrokerConstructor() {
     Broker.prototype.on =
     Broker.prototype.subscribe =
     Broker.prototype.addListener = function on(event, callback) {
-        throwIfNot(isValidEvent, EVENT_ERROR);
-        throwIfNot(isValidCallback, CALLBACK_ERROR);
-        data.get(this).set(event, _.concat(data.get(this).get(event), callback));
+        throwIfNot(isValidEvent, event, EVENT_ERROR);
+        throwIfNot(isValidCallback, callback, CALLBACK_ERROR);
+        data.get(this).set(event, _.uniq(_.concat(data.get(this).get(event), callback)));
         this.fire(Broker.Events.ADDED, {event, callback});
         return this.off.bind(this, event, callback);
     };
@@ -131,12 +145,12 @@ module.exports = (function getBrokerConstructor() {
      * been invoked, it will automatically be removed.
      * @function Broker#one
      * @alias Broker#once
-     * @param event {String | Symbol} The event to subscribe to.
+     * @param event {String} The event to subscribe to.
      * @param callback {Function} The listener to invoke when the
      *  specified event is emitted.
      * @returns {Function} A method to invoke to remove the listener
      *  from the specified event.
-     * @throws {TypeError} Parameter `event` must be a string or symbol.
+     * @throws {TypeError} Parameter `event` must be a non-empty string.
      * @throws {TypeError} Parameter `callback` must be a function.
      * @fires Broker#listenerAdded
      * @example
@@ -159,10 +173,10 @@ module.exports = (function getBrokerConstructor() {
      * @function Broker#off
      * @alias Broker#unsubscribe
      * @alias Broker#removeListener
-     * @param event {String | Symbol} The event whose listener should
+     * @param event {String} The event whose listener should
      *  be removed.
      * @param callback {Function} The listener to remove.
-     * @throws {TypeError} Parameter `event` must be a string or symbol.
+     * @throws {TypeError} Parameter `event` must be a non-empty string.
      * @throws {TypeError} Parameter `callback` must be a function.
      * @fires Broker#listenerRemoved
      * @example
@@ -173,18 +187,26 @@ module.exports = (function getBrokerConstructor() {
     Broker.prototype.off =
     Broker.prototype.unsubscribe =
     Broker.prototype.removeListener = function off(event, callback) {
-        throwIfNot(isValidEvent, EVENT_ERROR);
-        throwIfNot(isValidCallback, CALLBACK_ERROR);
-        data.get(this).set(event, _.without(data.get(this).get(event), callback));
-        this.fire(Broker.Events.REMOVED, {event, callback});
+        throwIfNot(isValidEvent, event, EVENT_ERROR);
+        throwIfNot(isValidCallback, callback, CALLBACK_ERROR);
+        var before = data.get(this).get(event) || [],
+            after = _.without(before, callback);
+        if (before.length !== after.length) {
+            if (_.isEmpty(after)) {
+                data.get(this).delete(event);
+            } else {
+                data.get(this).set(event, after);
+            }
+            this.fire(Broker.Events.REMOVED, {event, callback});
+        }
     };
 
     /**
      * Removes all listeners registered for the specified event.
      * @function Broker#removeAllListeners
-     * @param event {String | Symbol} The event whose listeners should
+     * @param event {String} The event whose listeners should
      *  all be removed.
-     * @throws {TypeError} Parameter `event` must be a string or symbol.
+     * @throws {TypeError} Parameter `event` must be a non-empty string.
      * @throws {TypeError} Parameter `callback` must be a function.
      * @fires Broker#listenerRemoved
      * @example
@@ -195,9 +217,8 @@ module.exports = (function getBrokerConstructor() {
      * broker.emit('custom-event'); // no handlers invoked
      */
     Broker.prototype.removeAllListeners = function removeAll(event) {
-        throwIfNot(isValidEvent, EVENT_ERROR);
+        throwIfNot(isValidEvent, event, EVENT_ERROR);
         _.forEach(data.get(this).get(event), this.off.bind(this, event));
-        data.get(this).delete(event);
     };
 
     /**
@@ -207,17 +228,32 @@ module.exports = (function getBrokerConstructor() {
      * event will be emitted but subsequent listeners will still be invoked.
      * @function Broker#emit
      * @alias Broker#fire
-     * @param event {String | Symbol} The event to emit.
+     * @alias Broker#announce
+     * @param event {String} The event to emit.
      * @param args {*} Any additional arguments to pass to listeners.
-     * @throws {TypeError} Parameter `event` must be a string or symbol.
+     * @throws {TypeError} Parameter `event` must be a non-empty string.
      * @fires Broker#error
      * @example
      * broker.on('my-custom-event', function() { ... });
      * broker.emit('my-custom-event'); // handler fired
+     * @example
+     * broker.on('log', function(msg, ...args) {
+     *    log.write(msg, args);
+     * });
+     * broker.emit('log', 'Today is %s', new Date());
+     * @example
+     * broker.on('sum', function(...nums) {
+     *    var sum = nums.reduce(function(result, num) {
+     *        return result + num;
+     *    }, 0);
+     *    log.info('The sum of', nums, 'is', sum);
+     * });
+     * broker.emit('add', 1, 2, 3, 4, 5);
      */
     Broker.prototype.emit =
-    Broker.prototype.fire = function emit(event, ...args) {
-        throwIfNot(isValidEvent, EVENT_ERROR);
+    Broker.prototype.fire =
+    Broker.prototype.announce = function emit(event, ...args) {
+        throwIfNot(isValidEvent, event, EVENT_ERROR);
         var listeners = _.concat(data.get(this).get(event));
         _.forEach(listeners, _.bind(announce, this, event, args));
     };
