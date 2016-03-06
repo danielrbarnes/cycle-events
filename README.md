@@ -53,7 +53,7 @@ off(); // remove the event handler
 function MyClass() {
   Broker.call(this); // mixin pub/sub
   Rx.Observable.fromEvent(this, 'error')
-    .subscribeOnNext(logger.error);
+    .subscribe(logger.error);
 }
 
 // now use the class:

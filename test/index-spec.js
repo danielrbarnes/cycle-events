@@ -1,6 +1,6 @@
 'use strict';
 
-var Broker = require('../index');
+var Broker = require('../index').Broker;
 var expect = require('chai').expect;
 
 function testEventParam(broker, method) {
@@ -48,10 +48,6 @@ describe('Broker', function() {
 
         it('returns instance (called with new)', function() {
             expect(new Broker()).to.be.an.instanceof(Broker);
-        });
-
-        it('returns instance (called without new)', function() {
-            expect(Broker()).to.be.an.instanceof(Broker);
         });
 
     });
@@ -132,7 +128,6 @@ describe('Broker', function() {
                 this.broker.on = function spy(event, callback) {
                     expect(event).to.equal('event');
                     expect(callback).to.be.a('function');
-                    expect(callback.name).to.equal('single');
                     done();
                 };
                 this.broker.one('event', Function.prototype);
