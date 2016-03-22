@@ -24,7 +24,6 @@
     "observable",
     "rxjs"
   ],
-  "private": true,
   "author": "Daniel R Barnes",
   "license": "MIT",
   "bugs": {
