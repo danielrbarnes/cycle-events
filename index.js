@@ -10,53 +10,53 @@ Object.defineProperty(exports, "__esModule", {
 });
 exports.Broker = undefined;
 
-var _forEach = require('lodash\\forEach');
+var _flow2 = require('lodash\\flow');
 
-var _forEach2 = _interopRequireDefault(_forEach);
+var _flow3 = _interopRequireDefault(_flow2);
 
-var _without = require('lodash\\without');
+var _bind2 = require('lodash\\bind');
 
-var _without2 = _interopRequireDefault(_without);
+var _bind3 = _interopRequireDefault(_bind2);
 
-var _flow = require('lodash\\flow');
+var _attempt2 = require('lodash\\attempt');
 
-var _flow2 = _interopRequireDefault(_flow);
+var _attempt3 = _interopRequireDefault(_attempt2);
 
-var _concat = require('lodash\\concat');
+var _trim2 = require('lodash\\trim');
 
-var _concat2 = _interopRequireDefault(_concat);
+var _trim3 = _interopRequireDefault(_trim2);
 
-var _uniq = require('lodash\\uniq');
+var _isError2 = require('lodash\\isError');
 
-var _uniq2 = _interopRequireDefault(_uniq);
+var _isError3 = _interopRequireDefault(_isError2);
 
-var _isError = require('lodash\\isError');
+var _isFunction2 = require('lodash\\isFunction');
 
-var _isError2 = _interopRequireDefault(_isError);
+var _isFunction3 = _interopRequireDefault(_isFunction2);
 
-var _bind = require('lodash\\bind');
+var _isEmpty2 = require('lodash\\isEmpty');
 
-var _bind2 = _interopRequireDefault(_bind);
+var _isEmpty3 = _interopRequireDefault(_isEmpty2);
 
-var _attempt = require('lodash\\attempt');
+var _isString2 = require('lodash\\isString');
 
-var _attempt2 = _interopRequireDefault(_attempt);
+var _isString3 = _interopRequireDefault(_isString2);
 
-var _isFunction = require('lodash\\isFunction');
+var _forEach2 = require('lodash\\forEach');
 
-var _isFunction2 = _interopRequireDefault(_isFunction);
+var _forEach3 = _interopRequireDefault(_forEach2);
 
-var _trim = require('lodash\\trim');
+var _concat2 = require('lodash\\concat');
 
-var _trim2 = _interopRequireDefault(_trim);
+var _concat3 = _interopRequireDefault(_concat2);
 
-var _isEmpty = require('lodash\\isEmpty');
+var _without2 = require('lodash\\without');
 
-var _isEmpty2 = _interopRequireDefault(_isEmpty);
+var _without3 = _interopRequireDefault(_without2);
 
-var _isString = require('lodash\\isString');
+var _uniq2 = require('lodash\\uniq');
 
-var _isString2 = _interopRequireDefault(_isString);
+var _uniq3 = _interopRequireDefault(_uniq2);
 
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
 
@@ -73,11 +73,11 @@ var data = new WeakMap(),
 // UTILITY METHODS
 
 function isValidEvent(event) {
-    return (0, _isString2.default)(event) && !(0, _isEmpty2.default)((0, _trim2.default)(event));
+    return (0, _isString3.default)(event) && !(0, _isEmpty3.default)((0, _trim3.default)(event));
 }
 
 function isValidCallback(callback) {
-    return (0, _isFunction2.default)(callback);
+    return (0, _isFunction3.default)(callback);
 }
 
 function throwIfNot(fn, arg, msg) {
@@ -88,8 +88,8 @@ function throwIfNot(fn, arg, msg) {
 
 function announce(event, args, callback) {
     /* jshint -W040 */
-    var error = (0, _attempt2.default)(_bind2.default.apply(undefined, [callback, this].concat(_toConsumableArray(args))));
-    if ((0, _isError2.default)(error)) {
+    var error = (0, _attempt3.default)(_bind3.default.apply(undefined, [callback, this].concat(_toConsumableArray(args))));
+    if ((0, _isError3.default)(error)) {
         this.emit(Broker.Events.ERROR, { event: event, callback: callback, error: error });
     }
 }
@@ -175,7 +175,7 @@ var Broker = exports.Broker = function () {
             var key = _info.key;
             var listeners = _info.listeners;
 
-            map.set(key, (0, _uniq2.default)((0, _concat2.default)(listeners, callback)));
+            map.set(key, (0, _uniq3.default)((0, _concat3.default)(listeners, callback)));
             this.fire(Broker.Events.ADDED, { event: event, callback: callback });
             return function () {
                 return _this.off(event, callback);
@@ -209,7 +209,7 @@ var Broker = exports.Broker = function () {
             var _arguments = arguments,
                 _this2 = this;
 
-            var single = (0, _flow2.default)(function () {
+            var single = (0, _flow3.default)(function () {
                 return callback.apply(undefined, _arguments);
             }, function () {
                 return _this2.off(event, single);
@@ -245,9 +245,9 @@ var Broker = exports.Broker = function () {
             var key = _info2.key;
             var map = _info2.map;
             var listeners = _info2.listeners;
-            var updated = (0, _without2.default)(listeners, callback);
+            var updated = (0, _without3.default)(listeners, callback);
             if (listeners.length !== updated.length) {
-                if ((0, _isEmpty2.default)(updated)) {
+                if ((0, _isEmpty3.default)(updated)) {
                     map.delete(key);
                 } else {
                     map.set(key, updated);
@@ -283,7 +283,7 @@ var Broker = exports.Broker = function () {
 
             var listeners = _info3.listeners;
 
-            (0, _forEach2.default)(listeners, function (callback) {
+            (0, _forEach3.default)(listeners, function (callback) {
                 return _this3.off(event, callback);
             });
         }
@@ -327,7 +327,7 @@ var Broker = exports.Broker = function () {
                 args[_key - 1] = arguments[_key];
             }
 
-            (0, _forEach2.default)(info(this, event).listeners, (0, _bind2.default)(announce, this, event, args));
+            (0, _forEach3.default)(info(this, event).listeners, (0, _bind3.default)(announce, this, event, args));
         }
 
         /**

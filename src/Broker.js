@@ -47,7 +47,7 @@ function announce(event, args, callback) {
         this.emit(Broker.Events.ERROR, {event, callback, error});
     }
 }
-    
+
 function info(ctx, event) {
     let {map, keys} = data.get(ctx),
         key = keys[event] = keys[event] || {};
@@ -219,7 +219,7 @@ export class Broker {
      * });
      * broker.emit('log', 'Today is %s', new Date());
      * @example
-     * broker.on('sum', function(...nums) {
+     * broker.on('add', function(...nums) {
      *    var sum = nums.reduce(function(result, num) {
      *        return result + num;
      *    }, 0);
@@ -296,7 +296,7 @@ export class Broker {
              * off(); // remove the event handler
              */
             REMOVED: 'listenerRemoved'
-            
+
         };
     }
 
@@ -312,7 +312,7 @@ Broker.prototype.once =
 Broker.prototype.one;
 
 Broker.prototype.unsubscribe =
-Broker.prototype.removeListener = 
+Broker.prototype.removeListener =
 Broker.prototype.off;
 
 Broker.prototype.fire =
